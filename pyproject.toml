@@ -1,0 +1,25 @@
+[project]
+name = "nem-battery-forecasts"
+version = "1.0.0"
+description = "How much battery arbitrage revenue survives dispatching on forecasts"
+requires-python = ">=3.11"
+dependencies = [
+  "highspy>=1.8",
+  "matplotlib>=3.8",
+  "nemosis>=3.8",
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "pyarrow>=16",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

@@ -1,0 +1,6 @@
+policy,description,revenue_aud,full_cycles,share_of_ceiling
+ceiling,Full-year perfect-foresight ceiling,26351988.5796,,1.0000
+oracle,Rolling-horizon optimiser with perfect foresight (oracle),26347425.8856,727.5576,0.9998
+aemo,Rolling-horizon optimiser with AEMO forecasts,13438367.9448,817.2366,0.5100
+profile,Rolling-horizon optimiser with a 7-day price profile,8357448.1533,402.1619,0.3171
+rule,Rule-based strategy with AEMO forecasts,7561790.9123,141.0496,0.2870

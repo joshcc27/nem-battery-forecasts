@@ -1,0 +1,4 @@
+comparison,per_day,low,high
+oracle - aemo,35271,28529,44914
+aemo - profile,13882,2958,28243
+aemo - rule,16056,6721,29630

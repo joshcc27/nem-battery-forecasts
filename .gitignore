@@ -1,0 +1,17 @@
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Data: commit only the processed partitions the study reads (May 2023 to May
+# 2024, including the week of warm-up), so the results reproduce without AEMO.
+data/*
+!data/cache/
+data/cache/*
+!data/cache/partitions/
+data/cache/partitions/*/*/year=2022/
+data/cache/partitions/*/*/year=2023/month=0[1-4].parquet
+data/cache/partitions/*/*/year=2024/month=0[6-9].parquet
+data/cache/partitions/*/*/year=2024/month=1?.parquet
+data/cache/partitions/*/*/year=202[5-9]/
+*.partial
