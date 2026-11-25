@@ -18,11 +18,11 @@ The rolling-horizon optimiser supplied with realised future prices is referred t
 
 | Strategy | Net arbitrage revenue | Share of ceiling |
 | --- | ---: | ---: |
-| Full-year perfect-foresight ceiling | A$26.35M | 100% |
-| Rolling-horizon optimiser with perfect foresight (oracle) | A$26.35M | 99.98% |
-| Rolling-horizon optimiser with AEMO forecasts | A$13.44M | 51.0% |
-| Rolling-horizon optimiser with a 7-day price profile | A$8.36M | 31.7% |
-| Rule-based strategy with AEMO forecasts | A$7.56M | 28.7% |
+| Full-year perfect-foresight ceiling | A\$26.35M | 100% |
+| Rolling-horizon optimiser with perfect foresight (oracle) | A\$26.35M | 99.98% |
+| Rolling-horizon optimiser with AEMO forecasts | A\$13.44M | 51.0% |
+| Rolling-horizon optimiser with a 7-day price profile | A\$8.36M | 31.7% |
+| Rule-based strategy with AEMO forecasts | A\$7.56M | 28.7% |
 
 ![Share of the perfect-foresight ceiling captured by each strategy](results/share_of_ceiling.png)
 
@@ -30,7 +30,7 @@ The rolling-horizon optimiser supplied with realised future prices is referred t
 
 Restricting the optimisation to a rolling 24-hour planning horizon has a negligible effect on annual arbitrage revenue when future prices are known.
 
-The oracle finishes within A$4,600 of the full-year perfect-foresight ceiling, despite committing dispatch decisions only one hour at a time. By contrast, replacing perfect foresight with AEMO's published forecasts reduces annual revenue by approximately A$12.91 million.
+The oracle finishes within A\$4,600 of the full-year perfect-foresight ceiling, despite committing dispatch decisions only one hour at a time. By contrast, replacing perfect foresight with AEMO's published forecasts reduces annual revenue by approximately A\$12.91 million.
 
 Forecast uncertainty therefore accounts for almost the entire gap between the theoretical ceiling and the AEMO-based optimiser.
 
@@ -38,8 +38,8 @@ Forecast uncertainty therefore accounts for almost the entire gap between the th
 
 The experimental design allows two separate sources of economic value to be identified.
 
-- **Forecast quality.** Optimising against AEMO's forecasts generates approximately A$5.08 million more than optimising against a naive historical price profile, which predicts each five-minute price using the median price at the corresponding time of day over the preceding seven days.
-- **Dispatch optimisation.** Given identical AEMO forecasts, the optimisation-based strategy generates approximately A$5.88 million more than a simple rule-based charging and discharging strategy.
+- **Forecast quality.** Optimising against AEMO's forecasts generates approximately A\$5.08 million more than optimising against a naive historical price profile, which predicts each five-minute price using the median price at the corresponding time of day over the preceding seven days.
+- **Dispatch optimisation.** Given identical AEMO forecasts, the optimisation-based strategy generates approximately A\$5.88 million more than a simple rule-based charging and discharging strategy.
 
 These results demonstrate that both the quality of the information available to a battery and the methodology used to translate that information into dispatch decisions have substantial economic consequences.
 
@@ -49,15 +49,15 @@ To assess whether the observed performance differences are driven by a small num
 
 | Daily revenue difference | Mean | 95% confidence interval |
 | --- | ---: | ---: |
-| Oracle minus AEMO optimiser | A$35,300 | A$28,500 to A$44,900 |
-| AEMO optimiser minus historical-profile optimiser | A$13,900 | A$3,000 to A$28,200 |
-| AEMO optimiser minus AEMO rule-based strategy | A$16,100 | A$6,700 to A$29,600 |
+| Oracle minus AEMO optimiser | A\$35,300 | A\$28,500 to A\$44,900 |
+| AEMO optimiser minus historical-profile optimiser | A\$13,900 | A\$3,000 to A\$28,200 |
+| AEMO optimiser minus AEMO rule-based strategy | A\$16,100 | A\$6,700 to A\$29,600 |
 
 All three confidence intervals exclude zero, providing statistical evidence of positive mean daily revenue differences.
 
-However, the economic value of AEMO's forecasts is highly concentrated. The AEMO-based optimiser outperforms the historical-profile optimiser on only 57% of trading days, with a median daily advantage of approximately A$1,800.
+However, the economic value of AEMO's forecasts is highly concentrated. The AEMO-based optimiser outperforms the historical-profile optimiser on only 57% of trading days, with a median daily advantage of approximately A\$1,800.
 
-Approximately 97% of its annual revenue advantage is generated during the 15 days on which electricity prices exceed A$5,000/MWh.
+Approximately 97% of its annual revenue advantage is generated during the 15 days on which electricity prices exceed A\$5,000/MWh.
 
 This suggests that the economic value of a forecasting model for battery arbitrage depends heavily on its ability to anticipate extreme price events, rather than consistently outperforming alternative forecasts during ordinary market conditions.
 
@@ -71,9 +71,9 @@ The figure examines the largest daily revenue shortfall, which occurred on 11 Au
 
 Two distinct forecasting failures can be observed.
 
-**Overprediction of price spikes.** Following a realised price spike at 07:10, AEMO continued to forecast prices of up to A$16,600/MWh until 08:00. In anticipation of these spikes, the battery charged at A$352/MWh. The forecast spikes did not materialise, leaving the battery having acquired energy at an unnecessarily high price.
+**Overprediction of price spikes.** Following a realised price spike at 07:10, AEMO continued to forecast prices of up to A\$16,600/MWh until 08:00. In anticipation of these spikes, the battery charged at A\$352/MWh. The forecast spikes did not materialise, leaving the battery having acquired energy at an unnecessarily high price.
 
-**Underprediction of price spikes.** From 18:35, prices spiked on and off until 21:00, but AEMO forecast only A$380/MWh to A$1,000/MWh for every interval up to 19:55. Valuing its stored energy accordingly, the AEMO-based optimiser discharged at full power whenever the price rose above that level, including at A$556/MWh between spikes, and had exhausted its usable capacity by 20:00. The oracle sold only into the spikes, recharging between them, and still held more than 100 MWh at 19:30, which it sold into the spikes that followed.
+**Underprediction of price spikes.** From 18:35, prices spiked on and off until 21:00, but AEMO forecast only A\$380/MWh to A\$1,000/MWh for every interval up to 19:55. Valuing its stored energy accordingly, the AEMO-based optimiser discharged at full power whenever the price rose above that level, including at A\$556/MWh between spikes, and had exhausted its usable capacity by 20:00. The oracle sold only into the spikes, recharging between them, and still held more than 100 MWh at 19:30, which it sold into the spikes that followed.
 
 These examples illustrate the intertemporal nature of battery arbitrage. Forecast errors affect not only immediate trading decisions but also the availability of stored energy for subsequent opportunities. An incorrect forecast can therefore generate losses that persist beyond the interval in which the error occurs.
 
@@ -94,7 +94,7 @@ The battery is modelled using the following physical and economic parameters.
 | Round-trip efficiency | 85% |
 | Minimum state of charge | 5% |
 | Maximum state of charge | 95% |
-| Degradation cost | A$25/MWh discharged |
+| Degradation cost | A\$25/MWh discharged |
 | Connection point | Hornsdale, South Australia |
 | Settlement resolution | 5 minutes |
 | Dispatch decision frequency | Hourly |
@@ -163,7 +163,7 @@ Both the rule-based strategy and the AEMO-based optimiser receive the same price
 
 All strategies are evaluated against realised five-minute electricity prices, irrespective of the forecasts used to determine dispatch.
 
-Energy settlement is adjusted using the applicable marginal loss factors for Hornsdale. A throughput-based degradation cost of A$25 is deducted for each MWh discharged.
+Energy settlement is adjusted using the applicable marginal loss factors for Hornsdale. A throughput-based degradation cost of A\$25 is deducted for each MWh discharged.
 
 Reported net arbitrage revenue therefore incorporates:
 
