@@ -1,20 +1,29 @@
 # How much battery arbitrage survives forecast error?
 
-A battery with perfect foresight of electricity prices could schedule its charging and discharging to maximise the value of energy arbitrage. In practice, however, batteries must make dispatch decisions under uncertainty, relying on imperfect forecasts of future electricity prices.
+[![Tests](https://github.com/joshcc27/nem-battery-forecasts/actions/workflows/tests.yml/badge.svg)](https://github.com/joshcc27/nem-battery-forecasts/actions/workflows/tests.yml)
 
-This project investigates how forecast quality and dispatch strategy affect the proportion of theoretical arbitrage value that can be captured in practice. In particular, it seeks to distinguish the value of better price forecasts from the value of better optimisation.
+A battery that knew every future electricity price could charge at the cheapest times and
+sell at the dearest. A real battery has to decide from forecasts. I wanted to know how much
+of the perfect-foresight revenue survives that, and how much of what's lost comes down to
+the forecast rather than the way decisions are made.
 
-The case study considers a hypothetical 100 MW / 200 MWh battery with 85% round-trip efficiency, located at Hornsdale in South Australia and participating in the National Electricity Market (NEM) from June 2023 to May 2024. While the battery is hypothetical, the historical electricity prices and forecasts published by the Australian Energy Market Operator (AEMO) are real.
+The test case is a hypothetical 100 MW / 200 MWh battery with 85% round-trip efficiency,
+connected at Hornsdale in South Australia and trading in the National Electricity Market
+(NEM) from June 2023 to May 2024. The battery is made up, but the prices and the forecasts
+published by the Australian Energy Market Operator (AEMO) are real.
 
-The principal finding is that **optimising against AEMO's published price forecasts captures approximately half of the perfect-foresight arbitrage value**, with much of its advantage over a naive forecast coming from a handful of extreme price events.
+The main finding: **optimising against AEMO's published forecasts captures about half of
+the perfect-foresight revenue.** Most of AEMO's advantage over a naive forecast comes from a
+handful of extreme price events.
 
 ## Results
 
-Four strategies are compared against a perfect-foresight ceiling to isolate the effects of limited planning horizons, forecast quality, and dispatch methodology.
+I compared four strategies against a perfect-foresight ceiling. The ceiling plans the whole
+year at once with every price known. The four strategies each re-plan every hour over the
+next 24 hours.
 
-The perfect-foresight ceiling optimises dispatch over the entire study year with complete knowledge of future prices. The remaining strategies operate on a rolling 24-hour planning horizon, updating their dispatch decisions hourly.
-
-The rolling-horizon optimiser supplied with realised future prices is referred to as the *oracle*. Although this strategy is not implementable in practice, it provides a benchmark against which the cost of forecast uncertainty can be measured separately from the cost of rolling-horizon decision-making.
+One of them, the *oracle*, is fed the real future prices. Nobody could run it in practice,
+but it separates the cost of forecast error from the cost of only planning a day ahead.
 
 | Strategy | Net arbitrage revenue | Share of ceiling |
 | --- | ---: | ---: |
@@ -26,26 +35,25 @@ The rolling-horizon optimiser supplied with realised future prices is referred t
 
 ![Share of the perfect-foresight ceiling captured by each strategy](results/share_of_ceiling.png)
 
-### The cost of forecast uncertainty
+### Nearly all the loss is forecast error
 
-Restricting the optimisation to a rolling 24-hour planning horizon has a negligible effect on annual arbitrage revenue when future prices are known.
+Planning a day ahead and committing one hour at a time costs almost nothing. With the real
+prices, the oracle finishes within A\$4,600 of the ceiling over the whole year. Switching
+to AEMO's forecasts costs A\$12.91 million. So forecast error accounts for almost the
+entire gap.
 
-The oracle finishes within A\$4,600 of the full-year perfect-foresight ceiling, despite committing dispatch decisions only one hour at a time. By contrast, replacing perfect foresight with AEMO's published forecasts reduces annual revenue by approximately A\$12.91 million.
+### Better forecasts and better decisions both matter
 
-Forecast uncertainty therefore accounts for almost the entire gap between the theoretical ceiling and the AEMO-based optimiser.
+- **Forecast quality.** Optimising against AEMO's forecasts earns A\$5.08 million more than
+  optimising against a naive profile. The profile predicts each five-minute price as the
+  median price at that time of day over the previous seven days.
+- **Decision method.** With the same AEMO forecasts, the optimiser earns A\$5.88 million
+  more than a simple charge-cheap, sell-dear rule.
 
-### The value of forecasting and optimisation
+### Checking the gaps aren't down to a few days
 
-The experimental design allows two separate sources of economic value to be identified.
-
-- **Forecast quality.** Optimising against AEMO's forecasts generates approximately A\$5.08 million more than optimising against a naive historical price profile, which predicts each five-minute price using the median price at the corresponding time of day over the preceding seven days.
-- **Dispatch optimisation.** Given identical AEMO forecasts, the optimisation-based strategy generates approximately A\$5.88 million more than a simple rule-based charging and discharging strategy.
-
-These results demonstrate that both the quality of the information available to a battery and the methodology used to translate that information into dispatch decisions have substantial economic consequences.
-
-### Statistical robustness
-
-To assess whether the observed performance differences are driven by a small number of exceptional trading days, paired daily revenue differences are evaluated using a block bootstrap.
+I compared the strategies day by day and put 95% confidence intervals on the mean daily
+difference with a block bootstrap. All three intervals stay above zero.
 
 | Daily revenue difference | Mean | 95% confidence interval |
 | --- | ---: | ---: |
@@ -53,165 +61,161 @@ To assess whether the observed performance differences are driven by a small num
 | AEMO optimiser minus historical-profile optimiser | A\$13,900 | A\$3,000 to A\$28,200 |
 | AEMO optimiser minus AEMO rule-based strategy | A\$16,100 | A\$6,700 to A\$29,600 |
 
-All three confidence intervals exclude zero, providing statistical evidence of positive mean daily revenue differences.
+AEMO's advantage over the profile is very uneven, though. It wins on only 57% of days, and
+on the median day by about A\$1,800. About 97% of its advantage over the year comes from
+the 15 days when prices went above A\$5,000/MWh. What makes a forecast valuable for a
+battery is mostly whether it sees the extreme events coming, not whether it is slightly
+better on ordinary days. That's a good reason to judge price forecasts by the decisions they
+lead to, not only by statistical accuracy.
 
-However, the economic value of AEMO's forecasts is highly concentrated. The AEMO-based optimiser outperforms the historical-profile optimiser on only 57% of trading days, with a median daily advantage of approximately A\$1,800.
+### Where the revenue is lost
 
-Approximately 97% of its annual revenue advantage is generated during the 15 days on which electricity prices exceed A\$5,000/MWh.
-
-This suggests that the economic value of a forecasting model for battery arbitrage depends heavily on its ability to anticipate extreme price events, rather than consistently outperforming alternative forecasts during ordinary market conditions.
-
-### Understanding the cost of forecast error
-
-The revenue lost through forecast uncertainty is less concentrated. The 15 extreme-price days account for 19% of the annual revenue gap between the AEMO-based optimiser and the oracle, the single worst-performing day for approximately 8%, and the ten worst-performing days for just over a fifth. Most of the gap accumulates on ordinary days.
+The loss against the oracle is spread more evenly. The 15 extreme-price days account for
+19% of it, the single worst day for about 8%, and the worst ten days for just over a fifth.
+Most of the gap builds up on ordinary days.
 
 ![Realised prices, forecast prices, and battery state of charge on 11 August 2023](results/worst_day.png)
 
-The figure examines the largest daily revenue shortfall, which occurred on 11 August 2023. The upper panel compares realised electricity prices with the AEMO forecasts available when each hourly dispatch decision was made. The lower panel illustrates the resulting state-of-charge trajectories.
+The figure shows the worst day, 11 August 2023. The top panel compares the real price with
+the AEMO forecast the battery was using when it committed each hour. The bottom panel shows
+how much energy each battery held. The forecast was wrong in both directions that day.
 
-Two distinct forecasting failures can be observed.
+**Morning: spikes forecast that never came.** After a real spike at 07:10, AEMO kept
+forecasting prices of up to A\$16,600/MWh until 08:00. The battery charged at
+A\$352/MWh to be ready for them, and the spikes never arrived.
 
-**Overprediction of price spikes.** Following a realised price spike at 07:10, AEMO continued to forecast prices of up to A\$16,600/MWh until 08:00. In anticipation of these spikes, the battery charged at A\$352/MWh. The forecast spikes did not materialise, leaving the battery having acquired energy at an unnecessarily high price.
+**Evening: spikes that weren't forecast.** From 18:35, prices spiked on and off until 21:00,
+but AEMO forecast only A\$380 to A\$1,000/MWh for every interval up to 19:55. Valuing its
+stored energy accordingly, the AEMO-based battery sold at full power whenever the price
+beat that level, including at A\$556/MWh between spikes, and was empty by 20:00. The
+oracle sold only into the spikes, recharged between them, and still held over 100 MWh at
+19:30 to sell into the spikes that followed.
 
-**Underprediction of price spikes.** From 18:35, prices spiked on and off until 21:00, but AEMO forecast only A\$380/MWh to A\$1,000/MWh for every interval up to 19:55. Valuing its stored energy accordingly, the AEMO-based optimiser discharged at full power whenever the price rose above that level, including at A\$556/MWh between spikes, and had exhausted its usable capacity by 20:00. The oracle sold only into the spikes, recharging between them, and still held more than 100 MWh at 19:30, which it sold into the spikes that followed.
+This is why forecast errors are so expensive for a battery. A wrong forecast doesn't just
+cost money in the interval it's wrong. It also decides how much energy is left for later.
 
-These examples illustrate the intertemporal nature of battery arbitrage. Forecast errors affect not only immediate trading decisions but also the availability of stored energy for subsequent opportunities. An incorrect forecast can therefore generate losses that persist beyond the interval in which the error occurs.
+Over the year the AEMO-based battery also cycled more than the oracle, 817 full cycles
+against 728, while earning about half as much.
 
-The AEMO-based optimiser also cycled the battery more than the oracle, completing 817 equivalent full cycles over the study year compared with 728, while earning approximately half the net arbitrage revenue.
+## Method
 
-## Methodology
-
-### Battery specification
-
-The battery is modelled using the following physical and economic parameters.
+### Battery
 
 | Parameter | Value |
 | --- | --- |
-| Maximum charging power | 100 MW |
-| Maximum discharging power | 100 MW |
+| Maximum charging and discharging power | 100 MW |
 | Nominal energy capacity | 200 MWh |
-| Usable energy capacity | 180 MWh |
+| Usable energy capacity | 180 MWh (5% to 95% charge) |
 | Round-trip efficiency | 85% |
-| Minimum state of charge | 5% |
-| Maximum state of charge | 95% |
 | Degradation cost | A\$25/MWh discharged |
 | Connection point | Hornsdale, South Australia |
-| Settlement resolution | 5 minutes |
-| Dispatch decision frequency | Hourly |
-| Optimisation horizon | 24 hours |
-| Study period | June 2023 – May 2024 |
+| Settlement | 5-minute prices |
+| Decisions | Hourly, planning 24 hours ahead |
+| Study period | June 2023 to May 2024 |
 
-The battery begins the study at its minimum state of charge, and any energy remaining at the end of the study period is assigned zero terminal value.
+The battery starts at its 5% floor, and any energy left at the end of the year is worth
+nothing. Full cycles are counted against the nominal 200 MWh.
 
-Equivalent full cycles are calculated relative to the nominal energy capacity of 200 MWh.
+### Hourly planning
 
-### Rolling-horizon optimisation
+At the start of each hour, each optimising strategy:
 
-The optimisation-based strategies use a rolling-horizon framework, similar to model predictive control (MPC).
+1. forecasts the next 24 hours of five-minute prices
+2. plans charging and discharging over those 24 hours
+3. turns the first hour of the plan into price limits for charging and discharging
+4. trades against the real five-minute prices using those limits
+5. updates the battery's charge and repeats an hour later
 
-At the beginning of each hour, the optimiser:
+The plan is a mixed-integer program solved with HiGHS, set up so the battery can't charge
+and discharge in the same interval. Binary variables are only needed at deeply negative
+prices, where doing both at once would otherwise pay. Everywhere else the continuous
+version gives the same plan.
 
-1. Constructs a forecast of electricity prices at five-minute resolution over the following 24 hours.
-2. Optimises charging and discharging decisions over the forecast horizon, subject to the battery's physical and economic constraints.
-3. Derives price thresholds for charging and discharging over the first hour of the optimised schedule.
-4. Executes dispatch against realised five-minute prices using these thresholds.
-5. Updates the battery's state of charge and repeats the optimisation at the beginning of the following hour.
+The battery doesn't follow the plan blindly. The plan puts a value on stored energy, which
+sets the most the battery will pay to charge and the least it will accept to discharge.
+When the real price is past one of those limits, the battery runs at full power. When it's
+exactly at the limit, it runs the planned amount. Otherwise it waits. If the forecast was
+right, this reproduces the plan exactly.
 
-The dispatch schedule is obtained by solving a mixed-integer linear program (MILP) using HiGHS, formulated so that the battery cannot charge and discharge within the same settlement interval. Binary variables are only needed at deeply negative prices, where doing both at once would otherwise be profitable; elsewhere a continuous relaxation gives the same schedule.
-
-Rather than committing to a fixed physical dispatch schedule for the following hour, the strategy uses the optimisation to determine the economic value of stored energy. This establishes a maximum willingness to pay for charging and a minimum acceptable price for discharging.
-
-During the committed hour, the battery charges or discharges at full power when the realised price is past the corresponding threshold, runs the planned amount when the price is exactly at the threshold, and otherwise remains idle, subject to its state-of-charge constraints.
-
-This approach allows dispatch to respond to unexpected price movements without reoptimising the strategy using information that was unavailable at the time of commitment. When forecast prices equal realised prices, the threshold-based dispatch reproduces the optimised schedule.
-
-### Price forecasts
-
-Three forecasting approaches are considered.
+### Forecasts
 
 | Forecast | Description |
 | --- | --- |
-| Perfect foresight | Realised future five-minute electricity prices, used exclusively as a benchmark. |
-| Historical profile | Median electricity price for each five-minute time-of-day interval over the preceding seven days. |
-| AEMO forecasts | A composite forecast combining AEMO's published pre-dispatch forecasts with the historical price profile. |
+| Perfect foresight | The real future prices. Only used as a benchmark. |
+| Historical profile | The median price at each five-minute time of day over the previous seven days. |
+| AEMO | AEMO's published forecasts, filled in with the historical profile further ahead. |
 
-The composite AEMO forecast is constructed according to the forecast horizon.
+The AEMO forecast is stitched together by horizon:
 
-| Forecast horizon | Source |
+| Horizon | Source |
 | --- | --- |
-| 0–1 hour | Latest available five-minute pre-dispatch forecast (P5MIN) |
-| 1–4 hours | Latest available half-hourly pre-dispatch forecast |
-| 4–24 hours | Seven-day historical price profile |
+| 0 to 1 hour | Latest five-minute pre-dispatch forecast (P5MIN) |
+| 1 to 4 hours | Latest half-hourly pre-dispatch forecast |
+| 4 to 24 hours | Seven-day historical profile |
 
-The four-hour cut-off was selected using observations from months preceding the study period. Over longer forecast horizons, pre-dispatch tended to overpredict extreme price events and performed worse than the historical-profile baseline under the preliminary evaluation.
+I stopped using pre-dispatch at four hours because further ahead it over-forecasts spikes.
+In the months I checked before the study period, it did worse than the profile beyond four
+hours.
 
-The cut-off was fixed before the study year was run, so the reported results are out of sample with respect to this choice. The preliminary evaluation itself is not included in this repository. The cut-off is a single parameter, `predispatch_hours` in `battery/forecasts.py`, so its effect on the study year can be explored by changing it and rerunning `run.py`. Any cut-off chosen that way would, however, be tuned on the study year itself.
+The cut-off was fixed before the study year was run, so the results are out of sample with
+respect to this choice. That preliminary check isn't included in this repository. The
+cut-off is one parameter, `predispatch_hours` in `battery/forecasts.py`, so you can change
+it and rerun `run.py` to see its effect. A cut-off chosen that way would be tuned on the
+study year itself, though.
 
-Forecasts are included only after their publication time, ensuring that dispatch decisions do not use information that would have been unavailable to a market participant at the time.
+Each forecast is only used from the time AEMO published it, so no strategy ever sees a
+forecast it couldn't have had.
 
-### Rule-based dispatch
+### Rule-based strategy
 
-A simpler rule-based strategy is included to distinguish the value of mathematical optimisation from the value of the underlying price forecasts.
+The rule charges in the two cheapest forecast hours of the next 24 and discharges in the two
+dearest, but only if the price spread covers efficiency losses and degradation. It uses the
+same AEMO forecasts as the optimiser, so the difference between them is down to how
+decisions are made.
 
-The strategy identifies the two cheapest and two most expensive forecast hours within the next 24 hours, scheduling charging and discharging accordingly.
+### Revenue
 
-Trading occurs only where the anticipated price spread is sufficient to cover round-trip efficiency losses and modelled degradation costs.
+Every strategy is settled at the real five-minute prices, adjusted by Hornsdale's marginal
+loss factors, less A\$25 for each MWh discharged to cover degradation. Efficiency losses
+are included. Capital costs, fixed operating costs and revenue from other market services
+are not, so these figures aren't a measure of total profitability.
 
-Both the rule-based strategy and the AEMO-based optimiser receive the same price forecasts, allowing their performance difference to be attributed to differences in dispatch methodology.
+### Ceiling
 
-### Revenue and settlement
+The ceiling solves the whole year as one linear program with every price known. No
+strategy can beat it, so each strategy's revenue is reported as a share of it.
 
-All strategies are evaluated against realised five-minute electricity prices, irrespective of the forecasts used to determine dispatch.
+### Confidence intervals
 
-Energy settlement is adjusted using the applicable marginal loss factors for Hornsdale. A throughput-based degradation cost of A\$25 is deducted for each MWh discharged.
-
-Reported net arbitrage revenue therefore incorporates:
-
-- Revenue from discharging energy into the market.
-- The cost of purchasing energy from the market.
-- Round-trip efficiency losses.
-- Marginal loss factor adjustments.
-- Modelled battery degradation costs.
-
-Capital expenditure, fixed operating costs, and revenue from other electricity market services are excluded. Net arbitrage revenue should therefore not be interpreted as total battery profitability.
-
-### Perfect-foresight ceiling
-
-The theoretical revenue ceiling is calculated by solving a single linear program over the entire study year using realised electricity prices.
-
-Unlike the rolling-horizon strategies, this optimisation has complete knowledge of future prices and is not restricted to a 24-hour planning horizon.
-
-The resulting objective value provides an upper bound on the revenue attainable by the modelled strategies. Expressing each strategy's revenue as a proportion of this ceiling provides a common basis for evaluating arbitrage value capture.
-
-### Statistical analysis
-
-Statistical uncertainty in the mean daily revenue differences is estimated using a paired block bootstrap with seven-day blocks.
-
-Resampling consecutive blocks rather than individual trading days preserves short-term temporal dependence arising from persistent market conditions and the battery's ability to carry stored energy between days.
+The intervals come from a paired bootstrap that resamples week-long blocks of days.
+Keeping consecutive days together matters because market conditions persist and the
+battery carries energy from one day into the next.
 
 ## Limitations
 
-The study deliberately simplifies several aspects of commercial battery operation to isolate the relationship between price forecasts, dispatch optimisation, and arbitrage revenue.
+- **Energy market only.** Frequency control services (FCAS) are a large part of what South
+  Australian batteries earn, and they aren't included.
+- **Price taker.** A real 100 MW battery would move the price, especially during spikes.
+- **Hourly decisions.** NEM participants can rebid every five minutes.
+- **Simplified bidding.** The price limits can change freely every hour. Real bids are made
+  in price bands with rebidding rules, which would cost the forecast-based strategies some
+  revenue.
+- **Reacting within the hour.** Within each hour the battery responds to every real
+  five-minute price, running at full power whenever the price crosses a limit. A real bid
+  stack can only respond at the band prices it submitted, so this flatters the
+  forecast-based strategies further. The oracle isn't affected, because its limits come
+  from the real prices.
+- **Simple degradation.** Degradation is a flat cost per MWh discharged, with no effect of
+  depth of discharge, temperature or calendar ageing.
+- **One site, one year.** The results may not carry over to other regions, batteries or
+  years.
 
-- **Energy-only participation.** The analysis excludes frequency control ancillary services (FCAS) and other potential revenue streams. These can materially affect the economics and optimal dispatch of a commercial battery.
+Treat the revenues as comparisons between strategies rather than as what a real battery
+would have earned.
 
-- **Price-taking assumption.** The battery's dispatch is assumed to have no effect on electricity prices. In practice, a 100 MW battery may materially influence market outcomes, particularly during periods of supply scarcity.
+## Running it
 
-- **Hourly decision frequency.** Dispatch strategies are updated hourly, whereas NEM participants can rebid at five-minute resolution. More frequent optimisation could allow a battery to respond more effectively to changing market conditions.
-
-- **Simplified bidding framework.** The model allows charging and discharging price thresholds to be updated freely each hour. In practice, NEM participants operate within submitted bid price bands and associated rebidding constraints. The flexibility of the modelled dispatch framework may therefore overstate the revenue achievable by forecast-based strategies.
-
-- **Intra-hour price response.** Within each committed hour, the battery responds to every realised five-minute price, running at full power whenever the price crosses a threshold. A real bid stack can respond only at the band prices it submitted, so this further flatters the forecast-based strategies. The oracle is unaffected, because its thresholds are derived from the realised prices.
-
-- **Simplified degradation model.** Battery degradation is represented by a constant cost per MWh discharged rather than an electrochemical model accounting for factors such as depth of discharge, temperature, and calendar ageing.
-
-- **Limited geographical and temporal scope.** The study examines a single connection point in South Australia over one year. The results may not generalise to other NEM regions, battery specifications, or market conditions.
-
-The reported revenues should consequently be interpreted as comparative estimates rather than directly achievable commercial trading outcomes.
-
-## Running the project
-
-The project uses `uv` for dependency management.
+You'll need [uv](https://docs.astral.sh/uv/).
 
 ```sh
 uv sync
@@ -219,38 +223,37 @@ uv run pytest
 uv run python run.py
 ```
 
-The repository includes the processed AEMO prices and forecasts the study reads (about 22 MB in `data/cache/partitions/`, one file per source table and month), so the results reproduce without downloading anything. The full-year simulation takes about a minute and a half, and the generated tables and figures are written to `results/`.
+The repository includes the processed AEMO prices and forecasts the study uses (about 22 MB
+in `data/cache/partitions/`, one file per table and month), so nothing needs downloading.
+The full year runs in about a minute and a half and writes its tables and figures to
+`results/`.
 
-If the study dates are changed, any months missing from the cache are downloaded from AEMO on the next run, roughly 1 GB for a full year. Downloads are retried following network errors, and files are written atomically so that an interrupted run can simply be restarted.
+If you change the study dates, any missing months are downloaded from AEMO on the next run,
+roughly 1 GB for a full year. Downloads retry after network errors, and files are written
+whole or not at all, so an interrupted run can just be restarted.
 
-Market price caps and marginal loss factors are defined by financial year in `battery/data.py`. Extending the study beyond the 2022–23 and 2023–24 financial years requires the corresponding parameters to be added before execution. The program raises an error if the required parameters are unavailable.
-
-### Repository structure
+Price caps and marginal loss factors are set by financial year in `battery/data.py`. To run
+outside 2022-23 and 2023-24, add those years first. The program stops with an error if
+they're missing.
 
 ```text
 battery/
-    data.py        Historical data retrieval and caching
-    forecasts.py   Perfect-foresight, historical, and AEMO forecasts
-    model.py       Battery model and mathematical optimisation
-    policies.py    Rolling-horizon and rule-based dispatch
-    study.py       Simulation, settlement, and statistical analysis
-    plots.py       Results visualisation
+    data.py        downloads and caches prices and AEMO forecasts
+    forecasts.py   perfect-foresight, historical and AEMO forecasts
+    model.py       the battery model and the optimisation
+    policies.py    hourly rolling dispatch and the rule
+    study.py       runs the year, settles revenue, compares strategies
+    plots.py       draws the figures
 
-tests/             Unit and integration tests
-results/           Generated tables and figures
-data/cache/        Processed AEMO prices and forecasts for the study period
-data/trace.parquet Dispatch trace for the figures (written by run.py)
-run.py             Main study entry point
+tests/             hand-worked cases, look-ahead checks, the ceiling bound, forecast
+                   stitching, negative prices, settlement and data loading
+results/           tables and figures
+data/cache/        processed AEMO prices and forecasts for the study period
+data/trace.parquet dispatch trace used by the figures (written by run.py)
+run.py             runs the study and draws the figures
 ```
 
-The test suite includes analytically verifiable dispatch cases, checks for look-ahead bias, verification of the perfect-foresight upper bound, forecast construction, negative-price handling, revenue settlement, and AEMO data ingestion.
+## Data
 
-### Data
-
-Electricity prices and pre-dispatch forecasts are sourced from the Australian Energy Market Operator's NEMweb archive. Market data © AEMO, used in accordance with AEMO's copyright permissions.
-
-## Conclusion
-
-Both forecast quality and dispatch optimisation contribute substantially to economic performance. However, the value of improved forecasting is disproportionately concentrated around a small number of extreme price events, during which errors in the anticipated timing and magnitude of price spikes can have significant consequences for subsequent dispatch decisions.
-
-These findings motivate evaluating electricity price forecasts not only through conventional statistical accuracy measures but also through the economic outcomes of the decisions they inform.
+Prices and pre-dispatch forecasts come from AEMO's NEMweb archive. Market data © AEMO, used
+in accordance with AEMO's copyright permissions.
