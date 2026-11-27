@@ -12,9 +12,10 @@ connected at Hornsdale in South Australia and trading in the National Electricit
 (NEM) from June 2023 to May 2024. The battery is made up, but the prices and the forecasts
 published by the Australian Energy Market Operator (AEMO) are real.
 
-The main finding: **optimising against AEMO's published forecasts captures about half of
-the perfect-foresight revenue.** Most of AEMO's advantage over a naive forecast comes from a
-handful of extreme price events.
+**Optimising against AEMO's published forecasts captures about half of the
+perfect-foresight revenue**, A\$13.4 million of A\$26.4 million. AEMO's forecasts beat a
+naive forecast mainly on a handful of extreme price days, but most of the revenue lost
+against perfect foresight is lost on ordinary days.
 
 ## Results
 
@@ -35,14 +36,19 @@ but it separates the cost of forecast error from the cost of only planning a day
 
 ![Share of the perfect-foresight ceiling captured by each strategy](results/share_of_ceiling.png)
 
-### Nearly all the loss is forecast error
+### With hourly bids, nearly all the loss is forecast error
 
 Planning a day ahead and committing one hour at a time costs almost nothing. With the real
 prices, the oracle finishes within A\$4,600 of the ceiling over the whole year. Switching
 to AEMO's forecasts costs A\$12.91 million. So forecast error accounts for almost the
 entire gap.
 
-### Better forecasts and better decisions both matter
+That depends on the battery being free to reset its price limits every hour. In the NEM,
+the ten price bands a battery offers in each direction are fixed for each trading day at
+12:30 the day before, and rebids on the day can only move quantity between them. Under that
+rule, part of the gap would come from bidding as well as from forecast error.
+
+### What the forecast and the optimiser are each worth
 
 - **Forecast quality.** Optimising against AEMO's forecasts earns A\$5.08 million more than
   optimising against a naive profile. The profile predicts each five-minute price as the
@@ -62,17 +68,17 @@ difference with a block bootstrap. All three intervals stay above zero.
 | AEMO optimiser minus AEMO rule-based strategy | A\$16,100 | A\$6,700 to A\$29,600 |
 
 AEMO's advantage over the profile is very uneven, though. It wins on only 57% of days, and
-on the median day by about A\$1,800. About 97% of its advantage over the year comes from
-the 15 days when prices went above A\$5,000/MWh. What makes a forecast valuable for a
-battery is mostly whether it sees the extreme events coming, not whether it is slightly
-better on ordinary days. That's a good reason to judge price forecasts by the decisions they
-lead to, not only by statistical accuracy.
+on the median day by about A\$1,850. About 97% of its advantage over the year comes from
+the 15 days when prices went above A\$5,000/MWh. For this battery, AEMO's forecasts were
+worth having almost entirely for how they did on those days, which argues for judging
+price forecasts by the revenue they lead to as well as by their accuracy.
 
 ### Where the revenue is lost
 
 The loss against the oracle is spread more evenly. The 15 extreme-price days account for
 19% of it, the single worst day for about 8%, and the worst ten days for just over a fifth.
-Most of the gap builds up on ordinary days.
+Most of the gap builds up on ordinary days. `results/extremes.csv` has the extreme-day
+figures quoted above.
 
 ![Realised prices, forecast prices, and battery state of charge on 11 August 2023](results/worst_day.png)
 
@@ -80,19 +86,17 @@ The figure shows the worst day, 11 August 2023. The top panel compares the real 
 the AEMO forecast the battery was using when it committed each hour. The bottom panel shows
 how much energy each battery held. The forecast was wrong in both directions that day.
 
-**Morning: spikes forecast that never came.** After a real spike at 07:10, AEMO kept
-forecasting prices of up to A\$16,600/MWh until 08:00. The battery charged at
-A\$352/MWh to be ready for them, and the spikes never arrived.
+In the morning, after a real spike at 07:10, AEMO kept forecasting prices of up to
+A\$16,600/MWh until 08:00. The battery charged at A\$352/MWh to be ready for spikes that
+never arrived.
 
-**Evening: spikes that weren't forecast.** From 18:35, prices spiked on and off until 21:00,
-but AEMO forecast only A\$380 to A\$1,000/MWh for every interval up to 19:55. Valuing its
+In the evening the reverse happened. From 18:35, prices spiked on and off until 21:00, but
+AEMO forecast only A\$380 to A\$1,000/MWh for every interval up to 19:55. Valuing its
 stored energy accordingly, the AEMO-based battery sold at full power whenever the price
 beat that level, including at A\$556/MWh between spikes, and was empty by 20:00. The
 oracle sold only into the spikes, recharged between them, and still held over 100 MWh at
-19:30 to sell into the spikes that followed.
-
-This is why forecast errors are so expensive for a battery. A wrong forecast doesn't just
-cost money in the interval it's wrong. It also decides how much energy is left for later.
+19:30 to sell into the spikes that followed. The AEMO-based battery had nothing left for
+them.
 
 Over the year the AEMO-based battery also cycled more than the oracle, 817 full cycles
 against 728, while earning about half as much.
@@ -197,9 +201,9 @@ battery carries energy from one day into the next.
   Australian batteries earn, and they aren't included.
 - **Price taker.** A real 100 MW battery would move the price, especially during spikes.
 - **Hourly decisions.** NEM participants can rebid every five minutes.
-- **Simplified bidding.** The price limits can change freely every hour. Real bids are made
-  in price bands with rebidding rules, which would cost the forecast-based strategies some
-  revenue.
+- **Simplified bidding.** The price limits can change freely every hour. Real band prices
+  are fixed the day before, which costs every strategy revenue, the oracle included (see
+  [above](#with-hourly-bids-nearly-all-the-loss-is-forecast-error)).
 - **Reacting within the hour.** Within each hour the battery responds to every real
   five-minute price, running at full power whenever the price crosses a limit. A real bid
   stack can only respond at the band prices it submitted, so this flatters the

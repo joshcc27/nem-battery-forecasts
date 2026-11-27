@@ -1,0 +1,8 @@
+,value
+extreme_days,15.0
+days_aemo_beats_profile,0.5683
+median_daily_advantage_aud,1849.0495
+advantage_from_extreme_days,0.9692
+loss_from_extreme_days,0.1927
+loss_from_worst_day,0.0843
+loss_from_worst_ten_days,0.2133

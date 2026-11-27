@@ -25,6 +25,7 @@ from battery.policies import run
 START = pd.Timestamp("2023-06-01", tz=AEST)
 END = pd.Timestamp("2024-06-01", tz=AEST)
 WARM_UP = pd.Timedelta(days=7)  # history the profile needs before the first decision
+EXTREME_PRICE = 5_000.0  # A$/MWh: a day is extreme if any interval goes above this
 
 POLICIES = {
     "oracle": "Rolling-horizon optimiser with perfect foresight (oracle)",
@@ -106,6 +107,22 @@ def main(cache: Path = Path("data/cache"), out: Path = Path("results"), jobs: in
     revenue = pd.DataFrame({name: settle(dispatch[name], d, battery) for name in POLICIES})
     daily = revenue.groupby(day).sum()
 
+    peak = pd.Series(d["price"][s]).groupby(day).max()
+    extreme = peak > EXTREME_PRICE
+    advantage = daily["aemo"] - daily["profile"]
+    loss = daily["oracle"] - daily["aemo"]
+    extremes = pd.Series(
+        {
+            "extreme_days": extreme.sum(),
+            "days_aemo_beats_profile": (advantage > 0).mean(),
+            "median_daily_advantage_aud": advantage.median(),
+            "advantage_from_extreme_days": advantage[extreme].sum() / advantage.sum(),
+            "loss_from_extreme_days": loss[extreme].sum() / loss.sum(),
+            "loss_from_worst_day": loss.max() / loss.sum(),
+            "loss_from_worst_ten_days": loss.nlargest(10).sum() / loss.sum(),
+        }
+    )
+
     summary = pd.DataFrame(
         {
             "policy": ["ceiling", *POLICIES],
@@ -131,6 +148,7 @@ def main(cache: Path = Path("data/cache"), out: Path = Path("results"), jobs: in
     summary.to_csv(out / "summary.csv", index=False, float_format="%.4f", **csv)
     pd.DataFrame(rows).to_csv(out / "comparisons.csv", index=False, float_format="%.0f", **csv)
     daily.to_csv(out / "daily.csv", float_format="%.2f", **csv)
+    extremes.round(4).to_csv(out / "extremes.csv", header=["value"], **csv)
     trace = pd.DataFrame({"time": times, "price": d["price"][s]})
     for name in ("oracle", "aemo"):
         for key in ("charge", "discharge", "forecast"):
