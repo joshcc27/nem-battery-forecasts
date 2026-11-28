@@ -5,13 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib
+import matplotlib.dates
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from battery.model import DT, Battery
 
 matplotlib.use("Agg")
-import matplotlib.dates  # noqa: E402
-import matplotlib.pyplot as plt  # noqa: E402
-import pandas as pd  # noqa: E402
-
-from battery.model import DT, Battery  # noqa: E402
 
 INK, GREY, BLUE = "#222222", "#8a8a8a", "#2a78d6"
 

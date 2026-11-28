@@ -17,10 +17,22 @@ import pandas as pd
 
 AEST = "Etc/GMT-10"  # NEM time: UTC+10 all year
 REGION = "SA1"
-FLOOR = -1_000.0
+PRICE_FLOOR = -1_000.0
 PRICE_CAP = {"2022-23": 15_500.0, "2023-24": 16_600.0}
 # Hornsdale 275 kV marginal loss factors (generation, load) from AEMO's MLF reports.
 LOSS_FACTORS = {"2022-23": (0.9652, 0.9681), "2023-24": (0.9653, 0.9682)}
+
+MMSDM = "https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/"
+FORECAST_TABLES = {
+    # name: (archive folder, file stem, run column, target column)
+    "p5min": ("DATA", "PUBLIC_DVD_P5MIN_REGIONSOLUTION", "RUN_DATETIME", "INTERVAL_DATETIME"),
+    "predispatch": (
+        "PREDISP_ALL_DATA",
+        "PUBLIC_DVD_PREDISPATCHPRICE",
+        "PREDISPATCHSEQNO",
+        "DATETIME",
+    ),
+}
 
 
 def financial_year(start: pd.Timestamp) -> str:
@@ -38,20 +50,8 @@ def for_year(table: dict, fy: str, name: str):
         raise ValueError(f"no {name} for {fy} (have {known}); add it in battery/data.py") from None
 
 
-MMSDM = "https://nemweb.com.au/Data_Archive/Wholesale_Electricity/MMSDM/"
-FORECAST_TABLES = {
-    # name: (archive folder, file stem, run column, target column)
-    "p5min": ("DATA", "PUBLIC_DVD_P5MIN_REGIONSOLUTION", "RUN_DATETIME", "INTERVAL_DATETIME"),
-    "predispatch": (
-        "PREDISP_ALL_DATA",
-        "PUBLIC_DVD_PREDISPATCHPRICE",
-        "PREDISPATCHSEQNO",
-        "DATETIME",
-    ),
-}
-
-
 def months(start: pd.Timestamp, end: pd.Timestamp) -> list[pd.Timestamp]:
+    """The months whose partitions hold the intervals ending in (start, end]."""
     first = start.tz_localize(None).to_period("M").start_time
     last = (end - pd.Timedelta(minutes=5)).tz_localize(None).to_period("M").start_time
     return list(pd.date_range(first, last, freq="MS"))
@@ -148,7 +148,6 @@ def download(url: str, attempts: int = 3, timeout: int = 900) -> bytes:
             if attempt == attempts:
                 raise
         time.sleep(30 * attempt)
-    raise AssertionError("unreachable")
 
 
 @dataclass(frozen=True)

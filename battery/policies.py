@@ -1,4 +1,4 @@
-"""Rolling dispatch: every hour, plan 24 hours ahead from a forecast and commit the first hour."""
+"""Every hour, plan the next 24 hours from a forecast and commit the first hour."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import numpy as np
 
-from battery.data import FLOOR
+from battery.data import PRICE_FLOOR
 from battery.model import DT, TIE_BREAK, Battery, Plan, plan
 
 HORIZON = 288  # 24 hours of 5-minute intervals
@@ -39,9 +39,9 @@ def run(
         window = slice(pos, min(pos + HORIZON, n))
         steps = window.stop - pos
         hour = slice(pos, min(pos + COMMIT, n))
-        f = np.clip(forecaster(price[:pos], steps), FLOOR, cap[window])
+        f = np.clip(forecaster(price[:pos], steps), PRICE_FLOOR, cap[window])
         if rule:
-            c, d = _rule(f, price[hour], gen_lf[pos], load_lf[pos], battery)
+            c, d = _rule(f, hour.stop - pos, gen_lf[pos], load_lf[pos], battery)
         else:
             p = plan(f, gen_lf[window], load_lf[window], battery, soc, hour.stop - pos)
             c, d = clear(price[hour], p, gen_lf[hour], load_lf[hour], battery)
@@ -85,7 +85,7 @@ def clear(
 
 def _rule(
     forecast: np.ndarray,
-    price: np.ndarray,
+    n: int,
     gen_lf: float,
     load_lf: float,
     b: Battery,
@@ -93,10 +93,9 @@ def _rule(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Charge in the two cheapest forecast hours and discharge in the two dearest.
 
-    It only trades if the spread between those hours pays for losses and
-    degradation.
+    It returns power for the next ``n`` intervals, and only trades if the spread
+    between those hours pays for losses and degradation.
     """
-    n = len(price)
     hourly = forecast[: len(forecast) // COMMIT * COMMIT].reshape(-1, COMMIT).mean(axis=1)
     if len(hourly) < 2 * hours:
         return np.zeros(n), np.zeros(n)

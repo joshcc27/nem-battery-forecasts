@@ -1,4 +1,4 @@
-"""Run the study and draw the figures: python run.py"""
+"""Run the study and draw the figures."""
 
 from battery import plots, study
 

@@ -50,11 +50,12 @@ rule, part of the gap would come from bidding as well as from forecast error.
 
 ### What the forecast and the optimiser are each worth
 
-- **Forecast quality.** Optimising against AEMO's forecasts earns A\$5.08 million more than
-  optimising against a naive profile. The profile predicts each five-minute price as the
-  median price at that time of day over the previous seven days.
-- **Decision method.** With the same AEMO forecasts, the optimiser earns A\$5.88 million
-  more than a simple charge-cheap, sell-dear rule.
+Optimising against AEMO's forecasts earns A\$5.08 million more than optimising against a
+naive profile. The profile predicts each five-minute price as the median price at that time
+of day over the previous seven days.
+
+With the same AEMO forecasts, the optimiser earns A\$5.88 million more than a simple
+charge-cheap, sell-dear rule.
 
 ### Checking the gaps aren't down to a few days
 
@@ -197,22 +198,22 @@ battery carries energy from one day into the next.
 
 ## Limitations
 
-- **Energy market only.** Frequency control services (FCAS) are a large part of what South
-  Australian batteries earn, and they aren't included.
-- **Price taker.** A real 100 MW battery would move the price, especially during spikes.
-- **Hourly decisions.** NEM participants can rebid every five minutes.
-- **Simplified bidding.** The price limits can change freely every hour. Real band prices
-  are fixed the day before, which costs every strategy revenue, the oracle included (see
+- Frequency control services (FCAS) are a large part of what South Australian batteries
+  earn, and they aren't included.
+- The battery is a price taker. A real 100 MW battery would move the price, especially
+  during spikes.
+- Decisions are hourly, but NEM participants can rebid every five minutes.
+- The price limits can change freely every hour. Real band prices are fixed the day before,
+  which costs every strategy revenue, the oracle included (see
   [above](#with-hourly-bids-nearly-all-the-loss-is-forecast-error)).
-- **Reacting within the hour.** Within each hour the battery responds to every real
-  five-minute price, running at full power whenever the price crosses a limit. A real bid
-  stack can only respond at the band prices it submitted, so this flatters the
-  forecast-based strategies further. The oracle isn't affected, because its limits come
-  from the real prices.
-- **Simple degradation.** Degradation is a flat cost per MWh discharged, with no effect of
-  depth of discharge, temperature or calendar ageing.
-- **One site, one year.** The results may not carry over to other regions, batteries or
-  years.
+- Within each hour the battery responds to every real five-minute price, running at full
+  power whenever the price crosses a limit. A real bid stack can only respond at the band
+  prices it submitted, so this flatters the forecast-based strategies further. The oracle
+  isn't affected, because its limits come from the real prices.
+- Degradation is a flat cost per MWh discharged, with no effect of depth of discharge,
+  temperature or calendar ageing.
+- The study covers one site and one year. The results may not carry over to other regions,
+  batteries or years.
 
 Treat the revenues as comparisons between strategies rather than as what a real battery
 would have earned.
@@ -241,6 +242,7 @@ outside 2022-23 and 2023-24, add those years first. The program stops with an er
 they're missing.
 
 ```text
+run.py             runs the study and draws the figures
 battery/
     data.py        downloads and caches prices and AEMO forecasts
     forecasts.py   perfect-foresight, historical and AEMO forecasts
@@ -254,7 +256,6 @@ tests/             hand-worked cases, look-ahead checks, the ceiling bound, fore
 results/           tables and figures
 data/cache/        processed AEMO prices and forecasts for the study period
 data/trace.parquet dispatch trace used by the figures (written by run.py)
-run.py             runs the study and draws the figures
 ```
 
 ## Data

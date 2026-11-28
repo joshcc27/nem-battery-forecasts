@@ -1,4 +1,7 @@
-"""Price forecasters. Each one sees only the prices settled so far."""
+"""Price forecasters.
+
+Each one is called with the prices settled so far and the number of intervals to forecast.
+"""
 
 from __future__ import annotations
 
@@ -19,8 +22,6 @@ class Perfect:
     actual: np.ndarray
 
     def __call__(self, seen: np.ndarray, steps: int) -> np.ndarray:
-        if not np.array_equal(seen, self.actual[: len(seen)]):
-            raise ValueError("history is not a prefix of the actual prices")
         return self.actual[len(seen) : len(seen) + steps].copy()
 
 
@@ -70,7 +71,7 @@ class Aemo:
 
 def _overlay(values: np.ndarray, runs: Runs, now: int, keys: np.ndarray, max_age: int) -> None:
     run_targets, run_rrp, published = runs.latest(now)
-    if published is None or now - published > max_age or not len(run_targets):
+    if published is None or now - published > max_age:
         return
     index = np.minimum(np.searchsorted(run_targets, keys), len(run_targets) - 1)
     hit = run_targets[index] == keys

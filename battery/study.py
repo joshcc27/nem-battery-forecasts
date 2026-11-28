@@ -1,4 +1,4 @@
-"""Run every policy over the holdout year and write the results."""
+"""Run every policy over the study year and write the results."""
 
 from __future__ import annotations
 
@@ -141,12 +141,13 @@ def main(cache: Path = Path("data/cache"), out: Path = Path("results"), jobs: in
         diff = (daily[a] - daily[b]).to_numpy()
         low, high = block_bootstrap(diff)
         rows.append({"comparison": f"{a} - {b}", "per_day": diff.mean(), "low": low, "high": high})
+    comparisons = pd.DataFrame(rows)
 
     out.mkdir(exist_ok=True)
     # Unix line endings, so a rerun on Windows doesn't show every CSV as changed.
     csv = {"lineterminator": "\n"}
     summary.to_csv(out / "summary.csv", index=False, float_format="%.4f", **csv)
-    pd.DataFrame(rows).to_csv(out / "comparisons.csv", index=False, float_format="%.0f", **csv)
+    comparisons.to_csv(out / "comparisons.csv", index=False, float_format="%.0f", **csv)
     daily.to_csv(out / "daily.csv", float_format="%.2f", **csv)
     extremes.round(4).to_csv(out / "extremes.csv", header=["value"], **csv)
     trace = pd.DataFrame({"time": times, "price": d["price"][s]})
@@ -155,4 +156,4 @@ def main(cache: Path = Path("data/cache"), out: Path = Path("results"), jobs: in
             trace[f"{name}_{key}"] = dispatch[name][key]
     trace.to_parquet(cache.parent / "trace.parquet", index=False)
     print(summary.to_string(index=False))
-    print(pd.DataFrame(rows).to_string(index=False))
+    print(comparisons.to_string(index=False))
